@@ -1,41 +1,33 @@
 pipeline {
-    agent {
-        docker {
-            image 'eclipse-temurin:17-jdk'
-            args '-u root -v /var/lib/jenkins/.m2:/root/.m2 --network host'
-        }
+    agent any
+
+    tools {
+        // Replace 'Maven3' and 'JDK17' with the exact names you set in Global Tool Configuration
+        maven 'Maven3'
+        jdk 'JDK17'
     }
-    
-    environment {
-        SONAR_HOST_URL = 'http://localhost:9000'
-    }
-    
+
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-        
-        stage('Build') {
+
+        stage('Build (Maven)') {
             steps {
-                sh 'chmod +x mvnw'
-                sh './mvnw clean package -DskipTests'
-            }
-        }
-        
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh './mvnw sonar:sonar'
-                }
+                sh 'echo "premier projet maven"'
+                sh 'mvn -B -DskipTests package'
             }
         }
     }
-    
+
     post {
         success {
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+        }
+        always {
+            junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
         }
     }
 }
