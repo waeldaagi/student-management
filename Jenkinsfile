@@ -13,7 +13,7 @@ pipeline {
             }
         }
 
-        stage('Build (Maven)) {
+        stage('Build (Maven)') {
             steps {
                 sh 'echo "premier projet maven"'
                 sh 'chmod +x mvnw || true'
