@@ -1,15 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'maven:3.9.2-eclipse-temurin-17'
-            // host network so container can hit Sonar at localhost:9000
-            args '-u root -v /var/lib/jenkins/.m2:/root/.m2 --network host'
-        }
-    }
-
-    environment {
-        SONAR_HOST_URL = 'http://localhost:9000'
-    }
+    agent any
 
     stages {
         stage('Checkout') {
@@ -28,8 +18,9 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
+                // Assumes you configured a SonarQube server named 'SonarQube' in Jenkins
                 withSonarQubeEnv('SonarQube') {
-                    sh "./mvnw -B sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL}"
+                    sh './mvnw -B sonar:sonar'
                 }
             }
         }
@@ -40,6 +31,7 @@ pipeline {
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
         }
         always {
+            // publish test reports if they exist
             junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
         }
     }
