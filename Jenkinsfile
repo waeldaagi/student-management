@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Adapt to your SonarQube server URL
+        // SonarQube URL (adapt if needed)
         SONAR_HOST_URL = 'http://192.168.149.132:9000'
     }
 
@@ -17,12 +17,14 @@ pipeline {
             steps {
                 sh 'echo "premier projet maven"'
                 sh 'chmod +x mvnw || true'
+                // run tests
                 sh './mvnw -B clean test'
             }
         }
 
         stage('Package') {
             steps {
+                // build jar: target/student-management-0.0.1-SNAPSHOT.jar
                 sh './mvnw -B package'
             }
         }
@@ -37,8 +39,8 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                // Build Docker image for the project
-                // You can push later to Docker Hub if you want
+                // Build Docker image using Dockerfile in repo root
+                // Requires Docker CLI available to Jenkins
                 sh 'docker build -t student-management:latest .'
             }
         }
@@ -46,9 +48,11 @@ pipeline {
 
     post {
         success {
+            // archive built jar(s)
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
         }
         always {
+            // publish JUnit test reports (if any)
             junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
         }
     }
