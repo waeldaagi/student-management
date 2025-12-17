@@ -8,7 +8,7 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            steps {
+            steps { 
                 checkout scm
             }
         }
@@ -37,13 +37,13 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
-            steps {
-                // Build Docker image using Dockerfile in repo root
-                // Requires Docker CLI available to Jenkins
-                sh 'docker build -t student-management:latest .'
-            }
-        }
+        // stage('Docker Build') {
+        //     steps {
+        //         // Build Docker image using Dockerfile in repo root
+        //         // Requires Docker CLI available to Jenkins
+        //         sh 'docker build -t student-management:latest .'
+        //     }
+        // }
 
         stage('Kubernetes Deploy') {
             steps {
