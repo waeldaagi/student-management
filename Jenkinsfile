@@ -2,77 +2,83 @@ pipeline {
     agent any
 
     environment {
-        // SonarQube URL (adapt if needed)
         SONAR_HOST_URL = 'http://192.168.149.132:9000'
+        DOCKER_REGISTRY = 'student-management'
+        DOCKER_IMAGE = 'student-management:latest'
     }
 
     stages {
         stage('Checkout') {
-            steps { 
+            steps {
+                echo "Checking out source code..."
                 checkout scm
             }
         }
 
-        stage('Build + Tests (JUnit)') {
+        stage('Build + Tests') {
             steps {
-                sh 'echo "premier projet maven"'
+                echo "Building and running tests..."
                 sh 'chmod +x mvnw || true'
-                // run tests
                 sh './mvnw -B clean test'
             }
         }
 
         stage('Package') {
             steps {
-                // build jar: target/student-management-0.0.1-SNAPSHOT.jar
-                sh './mvnw -B package'
+                echo "Packaging application..."
+                sh './mvnw -B package -DskipTests'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
+                echo "Running SonarQube analysis..."
                 withSonarQubeEnv('SonarQube') {
                     sh "./mvnw -B sonar:sonar -Dsonar.host.url=${SONAR_HOST_URL}"
                 }
             }
         }
 
-        // stage('Docker Build') {
-        //     steps {
-        //         // Build Docker image using Dockerfile in repo root
-        //         // Requires Docker CLI available to Jenkins
-        //         sh 'docker build -t student-management:latest .'
-        //     }
-        // }
+        stage('Docker Build') {
+            steps {
+                echo "Building Docker image..."
+                sh 'docker build -t ${DOCKER_IMAGE} .'
+                sh 'minikube image load ${DOCKER_IMAGE}'
+            }
+        }
 
         stage('Kubernetes Deploy') {
             steps {
+                echo "Deploying to Kubernetes..."
                 sh '''
-                echo "Applying Kubernetes manifests..."
+                    echo "Applying Kubernetes manifests..."
+                    kubectl apply -f k8s/mysql.yaml
+                    kubectl apply -f k8s/app.yaml
 
-                kubectl apply -f k8s/mysql.yaml
-                kubectl apply -f k8s/app.yaml
+                    echo "Waiting for deployments to become ready..."
+                    kubectl rollout status deployment/mysql --timeout=5m || true
+                    kubectl rollout status deployment/student-management --timeout=5m || true
 
-                echo "Waiting for deployments to become ready..."
-                kubectl rollout status deployment/mysql
-                kubectl rollout status deployment/student-management
-
-                echo "Current services:"
-                kubectl get svc
+                    echo "Current services:"
+                    kubectl get svc
+                    echo "Deployment status:"
+                    kubectl get pods
                 '''
-                }
-            }   
-
+            }
+        }
+    }
 
     post {
         success {
-            // archive built jar(s)
+            echo "Pipeline executed successfully!"
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
         }
         always {
-            // publish JUnit test reports (if any)
+            echo "Publishing test results..."
             junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
         }
+        failure {
+            echo "Pipeline failed. Check logs above for details."
+        }
     }
-}
 }
