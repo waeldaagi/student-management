@@ -45,7 +45,7 @@ pipeline {
         //     }
         // }
 
-        stage('Kubernetes Deploy') {
+     stage('Kubernetes Deploy') {
     steps {
         sh '''
           echo "Applying Kubernetes manifests..."
@@ -61,6 +61,7 @@ pipeline {
           kubectl get svc
         '''
     }
+}
 }
     }
 
