@@ -6,6 +6,9 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 
+# Debug: List files to verify RootController is present
+RUN find src -name "RootController.java" && ls -la src/main/java/tn/esprit/studentmanagement/controllers/ || echo "Controllers not found"
+
 # Build the project (skip tests for image build; CI will run tests)
 RUN mvn -B clean package -DskipTests
 
