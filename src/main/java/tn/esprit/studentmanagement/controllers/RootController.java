@@ -10,4 +10,5 @@ public class RootController {
     public String hello() {
         return "Student Management Application is running!";
     }
+
 }
