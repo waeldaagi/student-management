@@ -45,23 +45,23 @@ pipeline {
         //     }
         // }
 
-stage('Kubernetes Deploy') {
-    steps {
-        sh '''
-          echo "Applying Kubernetes manifests..."
+        stage('Kubernetes Deploy') {
+            steps {
+                sh '''
+                echo "Applying Kubernetes manifests..."
 
-          kubectl apply -f k8s/mysql.yaml
-          kubectl apply -f k8s/app.yaml
+                kubectl apply -f k8s/mysql.yaml
+                kubectl apply -f k8s/app.yaml
 
-          echo "Waiting for deployments to become ready..."
-          kubectl rollout status deployment/mysql
-          kubectl rollout status deployment/student-management
+                echo "Waiting for deployments to become ready..."
+                kubectl rollout status deployment/mysql
+                kubectl rollout status deployment/student-management
 
-          echo "Current services:"
-          kubectl get svc
-        '''
-        }
-    }   
+                echo "Current services:"
+                kubectl get svc
+                '''
+                }
+            }   
 
 
     post {
@@ -74,4 +74,5 @@ stage('Kubernetes Deploy') {
             junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
         }
     }
+}
 }
