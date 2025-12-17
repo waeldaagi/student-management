@@ -39,32 +39,30 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
-            steps {
-                echo "Building Docker image..."
-                sh 'docker build -t ${DOCKER_IMAGE} .'
-                sh 'minikube image load ${DOCKER_IMAGE}'
-            }
-        }
+        // stage('Docker Build') {
+        //     steps {
+        //         echo "Building Docker image..."
+        //         sh 'docker build -t ${DOCKER_IMAGE} .'
+        //         sh 'minikube image load ${DOCKER_IMAGE}'
+        //     }
+        // }
 
         stage('Kubernetes Deploy') {
-            steps {
-                echo "Deploying to Kubernetes..."
-                sh '''
-                    echo "Applying Kubernetes manifests..."
-                    kubectl apply -f k8s/mysql.yaml
-                    kubectl apply -f k8s/app.yaml
+                steps {
+            sh '''
+            echo "Applying Kubernetes manifests..."
 
-                    echo "Waiting for deployments to become ready..."
-                    kubectl rollout status deployment/mysql --timeout=5m || true
-                    kubectl rollout status deployment/student-management --timeout=5m || true
+            kubectl apply -f k8s/mysql.yaml
+            kubectl apply -f k8s/app.yaml
 
-                    echo "Current services:"
-                    kubectl get svc
-                    echo "Deployment status:"
-                    kubectl get pods
-                '''
-            }
+            echo "Waiting for deployments to become ready..."
+            kubectl rollout status deployment/mysql
+            kubectl rollout status deployment/student-management
+
+            echo "Current services:"
+            kubectl get svc
+            '''
+        }
         }
     }
 
